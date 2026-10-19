@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <esp_now.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <math.h>
@@ -18,7 +19,7 @@ const char* ap_password = "HELIOS_PASSWORD";
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-// Pines Cerebro 2 (Biometría del Astronauta)
+// Pines Cerebro 2 (Biometría del Astronauta - Standalone Fallback)
 const int pin_spo2 = 35;
 const int pin_bpm = 34;
 const int pin_body_temp = 32;
@@ -26,15 +27,17 @@ const int pin_ecg = 33;
 const int pin_ecg_lo_plus = 25;
 const int pin_ecg_lo_minus = 26;
 
-// Pines Cerebro 1 (Matriz Ambiental)
+// Pines Cerebro 1 (Matriz Ambiental - Standalone Fallback)
 const int pin_internal_temp = 27;
 const int pin_humidity = 14;
 const int pin_air_quality = 12;
 const int pin_radiation = 13;
 
-// Telemetría compartida
+// Telemetría compartida y control distribuido
 unsigned long last_telemetry_time = 0;
 bool sensor_valid = true;
+volatile bool has_espnow_c1 = false;
+volatile bool has_espnow_c2 = false;
 
 // Estado
 #define MAX_DIAGNOSTICS 50 // Escalonado para soportar EVAs de alta complejidad
@@ -52,8 +55,43 @@ void on_ws_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventT
 
 QueueHandle_t ws_queue;
 
+/**
+ * @brief Callback de recepción ESP-NOW para Nodos Periféricos (Cerebro 1 y Cerebro 2)
+ */
+void on_espnow_recv(const uint8_t *mac, const uint8_t *incoming_data, int len) {
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, incoming_data, len);
+    if (!error) {
+        const char* node = doc["node"];
+        if (node && strcmp(node, "cerebro_1") == 0) {
+            state_vector[4] = doc["internal_temp"] | 0;
+            state_vector[5] = doc["humidity"] | 0;
+            state_vector[6] = doc["air_quality"] | 0;
+            state_vector[7] = doc["radiation"] | 0;
+            has_espnow_c1 = true;
+        } else if (node && strcmp(node, "cerebro_2") == 0) {
+            state_vector[0] = doc["spo2"] | 0;
+            state_vector[1] = doc["bpm"] | 0;
+            state_vector[2] = doc["body_temp"] | 0;
+            state_vector[3] = doc["ecg"] | 0;
+            sensor_valid = doc["sensor_valid"] | true;
+            has_espnow_c2 = true;
+        }
+    }
+}
+
 void core0_comms_task(void * parameter) {
-    WiFi.softAP(ap_ssid, ap_password);
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.softAP(ap_ssid, ap_password, 1); // Canal 1 para convivir con ESP-NOW
+
+    // Inicializar receptor ESP-NOW para Cerebro 1 y Cerebro 2
+    if (esp_now_init() == ESP_OK) {
+        esp_now_register_recv_cb(on_espnow_recv);
+        log_info("ESP-NOW receptor activado. Listo para enlazar Cerebro 1 y Cerebro 2.");
+    } else {
+        log_error("Fallo inicializando ESP-NOW receptor en Cerebro 3.");
+    }
+
     ws.onEvent(on_ws_event);
     server.addHandler(&ws);
     server.begin();
@@ -137,23 +175,26 @@ void core1_processing_task(void * parameter) {
     while (true) {
         unsigned long current_time = millis();
         
-        // 1. Lectura del estado de sensores
-        state_vector[0] = analogRead(pin_spo2);
-        state_vector[1] = analogRead(pin_bpm);
-        state_vector[2] = analogRead(pin_body_temp);
-        state_vector[3] = analogRead(pin_ecg);
-        state_vector[4] = analogRead(pin_internal_temp);
-        state_vector[5] = analogRead(pin_humidity);
-        state_vector[6] = analogRead(pin_air_quality);
-        state_vector[7] = analogRead(pin_radiation);
-        
-        // 2. Validación de Sensores (Quality Flags)
-        sensor_valid = true;
-        if (digitalRead(pin_ecg_lo_plus) == 1 || digitalRead(pin_ecg_lo_minus) == 1) {
-            sensor_valid = false;
+        // 1. Adquisición: Si se reciben paquetes inalámbricos de Cerebro 1 y Cerebro 2,
+        // se respeta su telemetría. De lo contrario, se leen los pines locales (Fallback Standalone).
+        if (!has_espnow_c2) {
+            state_vector[0] = analogRead(pin_spo2);
+            state_vector[1] = analogRead(pin_bpm);
+            state_vector[2] = analogRead(pin_body_temp);
+            state_vector[3] = analogRead(pin_ecg);
+            
+            // Validación local de electrodos y señal
+            sensor_valid = true;
+            if (digitalRead(pin_ecg_lo_plus) == 1 || digitalRead(pin_ecg_lo_minus) == 1 || state_vector[0] < 100) {
+                sensor_valid = false;
+            }
         }
-        if (state_vector[0] < 100) { 
-            sensor_valid = false;
+
+        if (!has_espnow_c1) {
+            state_vector[4] = analogRead(pin_internal_temp);
+            state_vector[5] = analogRead(pin_humidity);
+            state_vector[6] = analogRead(pin_air_quality);
+            state_vector[7] = analogRead(pin_radiation);
         }
         
         // 3. Tolerancia de Latencia

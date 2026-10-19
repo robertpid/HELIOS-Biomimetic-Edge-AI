@@ -1,66 +1,127 @@
 # H.E.L.I.O.S. — Biomimetic Edge AI Life-Support System
 > **Hardware & Environment Life-support Intelligent Operating System**  
-> *Inferencia Neuromórfica en el Edge (ESP32 Dual-Core) con FreeRTOS y HUD Aeroespacial Offline-First*
+> *Inferencia Neuromórfica Distribuida en el Edge (ESP32 Multi-Node + FreeRTOS) y HUD Aeroespacial Offline-First*
 
-[![ESP32](https://img.shields.io/badge/Hardware-ESP32%20Dual--Core-red.svg?style=for-the-badge&logo=espressif)](https://www.espressif.com/)
+[![ESP32](https://img.shields.io/badge/Hardware-ESP32%20Multi--Node-red.svg?style=for-the-badge&logo=espressif)](https://www.espressif.com/)
 [![FreeRTOS](https://img.shields.io/badge/OS-FreeRTOS-blue.svg?style=for-the-badge&logo=freertos)](https://www.freertos.org/)
 [![Edge AI](https://img.shields.io/badge/Edge%20AI-Deep%20Neural%20Network-emerald.svg?style=for-the-badge&logo=scikitlearn)](https://github.com/robertpid/HELIOS-Biomimetic-Edge-AI)
 [![Python](https://img.shields.io/badge/Python-3.10%2B%20%7C%20Type--Hinted-yellow.svg?style=for-the-badge&logo=python)](https://www.python.org/)
 [![C++](https://img.shields.io/badge/Firmware-C%2B%2B17%20%2F%20Arduino-blue.svg?style=for-the-badge&logo=c%2B%2B)](https://isocpp.org/)
-[![WebSockets](https://img.shields.io/badge/Comms-Async%20WebSockets%20%40%2010Hz-orange.svg?style=for-the-badge&logo=websocket)](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
+[![ESP-NOW](https://img.shields.io/badge/Inter--Node-ESP--NOW%20%40%2010Hz-purple.svg?style=for-the-badge&logo=wi-fi)](https://www.espressif.com/en/solutions/low-power-solutions/esp-now)
+[![WebSockets](https://img.shields.io/badge/Comms-Async%20WebSockets%20%40%20Port%2080-orange.svg?style=for-the-badge&logo=websocket)](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey.svg?style=for-the-badge)](LICENSE)
 
 ---
 
 ## 🛰️ 1. Visión General del Proyecto
 
-**H.E.L.I.O.S.** es una arquitectura ciberfísica e inteligente diseñada para misiones espaciales extravehiculares (EVA) y entornos hostiles extremos. Combina telemetría biométrica del astronauta y monitoreo ambiental del traje espacial con un **motor de inferencia neuronal embebido en el microcontrolador (Edge AI)**, eliminando por completo la dependencia de servidores en la nube, routers intermedios o conexión a Internet.
+**H.E.L.I.O.S.** es una arquitectura ciberfísica e inteligente diseñada para misiones espaciales extravehiculares (EVA) y entornos hostiles extremos. El sistema implementa una **topología distribuida de 3 microcontroladores independientes (los 3 Cerebros)** comunicados a través del protocolo de baja latencia **ESP-NOW**, integrados por un nodo central que ejecuta una **red neuronal profunda en el microcontrolador (Edge AI)** inspirada en el conectoma de la mosca (*Drosophila melanogaster*).
 
-El sistema procesa en tiempo real 8 canales de telemetría física, evalúa anomalías críticas según el protocolo clínico **NEWS2** y ejecuta una **red neuronal profunda inspirada en el conectoma de la mosca (*Drosophila melanogaster*)**, emitiendo diagnósticos y sugerencias tácticas inmediatas hacia un HUD aeroespacial con latencia sub-milisegundo.
+El sistema opera **100% desconectado de Internet** (offline-first), eliminando cuellos de botella y riesgos de desconexión en el espacio exterior.
 
 ```
-                      +-------------------------------------------------+
-                      |              TRAJE ESPACIAL (EVA)               |
-                      |                                                 |
-  +---------------+   |  [SpO2, BPM, Temp, ECG, Gas, Rad, Temp, Hum]    |
-  | Sensores      |-->|                         |                       |
-  | Biomédicos y  |   |                         v                       |
-  | Ambientales   |   |     +---------------------------------------+   |
-  +---------------+   |     |           ESP32 DUAL-CORE             |   |
-                      |     |  +---------------------------------+  |   |
-                      |     |  | CORE 1: Edge AI & Sensing       |  |   |
-                      |     |  | - ADC Sampling (10 Hz)          |  |   |
-                      |     |  | - Hardware Lead-Off Check       |  |   |
-                      |     |  | - Min-Max Normalization         |  |   |
-                      |     |  | - DNN Matrix Inference (8x64x20)|  |   |
-                      |     |  | - Tactical Decision Engine      |  |   |
-                      |     |  +---------------------------------+  |   |
-                      |     |                   | FreeRTOS Queue    |   |
-                      |     |                   v (Non-blocking)    |   |
-                      |     |  +---------------------------------+  |   |
-                      |     |  | CORE 0: Async Communications   |  |   |
-                      |     |  | - SoftAP (HELIOS_NETWORK)       |  |   |
-                      |     |  | - Async WebServer (Port 80)     |  |   |
-                      |     |  | - Async WebSockets (/ws)        |  |   |
-                      |     |  +---------------------------------+  |   |
-                      |     +-------------------|-------------------+   |
-                      +-------------------------|-----------------------+
-                                                | WiFi 802.11 b/g/n (SoftAP)
-                                                v
-                              +-----------------------------------+
-                              |     HUD AEROESPACIAL (MÓVIL)      |
-                              | - Glassmorphism UI (Offline)      |
-                              | - Real-Time ECG Oscilloscope      |
-                              | - Diagnóstico NEWS2 Autónomo      |
-                              | - Acciones de Emergencia EVA      |
-                              +-----------------------------------+
+                  +-------------------------------------------------+
+                  |       ARQUITECTURA DE LOS 3 CEREBROS (EVA)      |
+                  +-------------------------------------------------+
+
+  [CEREBRO 1: MICROCONTROLADOR AMBIENTAL]
+  (cerebro_1_ambiental.cpp - ESP32 Dedicado)
+  - Temp. Interna Traje (GPIO 27)
+  - Humedad Relativa (GPIO 14)
+  - Calidad del Aire / Gases VOC (GPIO 12)
+  - Radiación Ionizante / UV (GPIO 13)
+  - FreeRTOS Watchdog Task
+         |
+         | ESP-NOW (Canal 1 / 10 Hz)
+         v
+  +-----------------------------------------------------------------+
+  |        CEREBRO 3: NODO CENTRAL Y MOTOR EDGE AI (ESP32)          |
+  |                    (central_node.cpp)                           |
+  |                                                                 |
+  |  +-----------------------------------------------------------+  |
+  |  | CORE 0: Comunicaciones y Enlace Inalámbrico               |  |
+  |  | - Receptor ESP-NOW (Fusión C1 + C2)                       |  |
+  |  | - SoftAP Autónomo (HELIOS_NETWORK)                        |  |
+  |  | - Servidor WebSockets Asíncrono (/ws @ Port 80)           |  |
+  |  +-----------------------------------------------------------+  |
+  |                               | FreeRTOS Queue (No bloqueante)   |
+  |                               v                                 |
+  |  +-----------------------------------------------------------+  |
+  |  | CORE 1: Inferencia Biomimética y Supervisión              |  |
+  |  | - Normalización Vectorial Min-Max                         |  |
+  |  | - Inferencia Red Neuronal Profunda (8 -> 64 -> 20)        |  |
+  |  | - Evaluación Clínica NEWS2 y Directivas EVA               |  |
+  |  +-----------------------------------------------------------+  |
+  +-----------------------------------------------------------------+
+         ^
+         | ESP-NOW (Canal 1 / 10 Hz)
+         |
+  [CEREBRO 2: MICROCONTROLADOR BIOMÉTRICO]
+  (cerebro_2_biometrico.cpp - ESP32 Dedicado)
+  - Saturación SpO2 (GPIO 35)
+  - Frecuencia Cardíaca BPM (GPIO 34)
+  - Temperatura Corporal (GPIO 32)
+  - Electrocardiograma ECG AD8232 (GPIO 33)
+  - Detección Lead-Off LO+/LO- (GPIO 25, 26)
+  - FreeRTOS Watchdog Task
+         |
+         +----------------------------+
+                                      | WiFi SoftAP (802.11 b/g/n)
+                                      v
+                    +-----------------------------------+
+                    |     HUD AEROESPACIAL (MÓVIL)      |
+                    |        (frontend/)                |
+                    | - Glassmorphism UI (Offline)      |
+                    | - Real-Time ECG Oscilloscope      |
+                    | - Diagnóstico NEWS2 Autónomo      |
+                    | - Acciones Tácticas Inmediatas    |
+                    +-----------------------------------+
 ```
 
 ---
 
-## 🧬 2. Fundamentos de Inteligencia Artificial Biomimética
+## 🧩 2. Distribución de los 3 Cerebros (Microcontroladores)
 
-La arquitectura de inferencia matemática de H.E.L.I.O.S. emula los principios de codificación dispersa (*Sparse Coding*) observados en las **células de Kenyon del cuerpo fúngico (*Mushroom Body*)** del cerebro de *Drosophila melanogaster*:
+El sistema se divide físicamente en tres unidades de cómputo especializadas, cumpliendo con el principio de responsabilidad única (**SRP**):
+
+### 🌡️ Cerebro 1: Módulo Ambiental del Traje (`cerebro_1_ambiental.cpp`)
+- **Hardware:** Microcontrolador ESP32 dedicado montado en la estructura del traje.
+- **Pines y Sensores:**
+  - `GPIO 27`: Temperatura interna del traje espacial.
+  - `GPIO 14`: Humedad relativa interna.
+  - `GPIO 12`: Calidad del aire y detección de gases tóxicos / VOC (MQ-135).
+  - `GPIO 13`: Radiación ionizante / sensor UV.
+- **Protocolo:** Transmite paquetes estructurados vía **ESP-NOW** a 10 Hz hacia el Cerebro 3.
+- **Protección:** Tarea de FreeRTOS `environmental_watchdog_task` que reinicia el chip en 5 segundos si los sensores sufren fallo de bus.
+
+### ❤️ Cerebro 2: Módulo Biométrico y Soporte Vital (`cerebro_2_biometrico.cpp`)
+- **Hardware:** Microcontrolador ESP32 dedicado adherido a la vestimenta biomédica del astronauta.
+- **Pines y Sensores:**
+  - `GPIO 35`: Saturación de oxígeno en sangre ($SpO_2$).
+  - `GPIO 34`: Pulso y frecuencia cardíaca (BPM).
+  - `GPIO 32`: Temperatura corporal periférica/central.
+  - `GPIO 33`: Señal analógica de electrocardiograma continuo (AD8232).
+  - `GPIO 25` y `GPIO 26`: Pines digitales `LO+` / `LO-` de detección de electrodos desprendidos (*Lead-Off Detection*).
+- **Protocolo:** Transmite paquetes biométricos validados vía **ESP-NOW** a 10 Hz hacia el Cerebro 3.
+- **Protección:** Si los electrodos se despegan del cuerpo, conmuta el flag `sensor_valid = false` para alertar al sistema y suprimir diagnósticos erróneos de la IA.
+
+### 🧠 Cerebro 3: Nodo Central, Inferencia y Servidor (`central_node.cpp`)
+- **Hardware:** Microcontrolador ESP32 Dual-Core con FreeRTOS (Cerebro Maestro).
+- **Núcleo 0 (Comunicaciones):**
+  - Receptor asíncrono **ESP-NOW** que fusiona los paquetes del Cerebro 1 y Cerebro 2.
+  - Despliega el punto de acceso WiFi `HELIOS_NETWORK` (WPA2-PSK).
+  - Servidor `ESPAsyncWebServer` y `AsyncWebSocket` en el puerto 80 hacia el HUD móvil.
+- **Núcleo 1 (Edge AI y Supervisión):**
+  - Fusión de las 8 variables físicas normalizadas.
+  - Inferencia de la Red Neuronal Profunda con pesos de `pesos_nasa.h`.
+  - Evaluación clínica según el protocolo **NEWS2** y despacho de sugerencias tácticas.
+  - *Modo Fallback:* Si no detecta nodos inalámbricos, puede muestrear directamente los pines locales para pruebas en una sola placa.
+
+---
+
+## 🧬 3. Fundamentos de Inteligencia Artificial Biomimética
+
+La arquitectura matemática de H.E.L.I.O.S. emula los principios de codificación dispersa (*Sparse Coding*) observados en las **células de Kenyon del cuerpo fúngico (*Mushroom Body*)** del cerebro de *Drosophila melanogaster*:
 
 1. **Expansión a Alta Dimensión (Kenyon Cells):** El vector sensorial de entrada (8 canales) se proyecta hacia una capa intermedia densa de 64 neuronas mediante proyecciones no lineales activadas con **ReLU** ($A_1 = \max(0, Z_1)$). Esto genera una representación dispersa que desacopla anomalías compuestas.
 2. **Clasificación Multietiqueta Dispersa:** La capa de salida evalúa simultáneamente **20 diagnósticos médicos y ambientales independientes** mediante funciones de activación sigmoide individuales:
@@ -71,42 +132,7 @@ La arquitectura de inferencia matemática de H.E.L.I.O.S. emula los principios d
 
 ---
 
-## ⚙️ 3. Arquitectura del Firmware (ESP32 & FreeRTOS)
-
-El firmware implementa una estricta separación de responsabilidades (**Single Responsibility Principle - SRP**) aprovechando la arquitectura Dual-Core del procesador Xtensa LX6:
-
-### ⚡ Núcleo 0: Comunicaciones y Red Asíncrona (`core0_comms_task`)
-- **Punto de Acceso Autónomo (SoftAP):** Despliega la red WiFi `HELIOS_NETWORK` (WPA2-PSK), permitiendo que cualquier dispositivo (smartphone, tablet o HUD de casco) se conecte en cualquier planeta sin requerir routers ni infraestructura terrestre.
-- **Servidor Web y WebSockets Asíncronos:** Utiliza `ESPAsyncWebServer` y `AsyncWebSocket` en el puerto 80. La transmisión de telemetría a 10 Hz se realiza sin bloqueos de socket gracias a callbacks orientados a eventos.
-- **Consumo de Cola IPC:** Lee paquetes serializados desde una cola de FreeRTOS (`ws_queue`) de forma no bloqueante (`pdPASS` con timeout 0), garantizando que caídas de red o clientes lentos nunca degraden la tarea de soporte vital.
-
-### 🧠 Núcleo 1: Adquisición, Detección de Fallas y Edge AI (`core1_processing_task`)
-- **Muestreo a Alta Frecuencia (10 Hz):** Lectura analógica continua de 8 canales biométricos y ambientales.
-- **Flags de Calidad y Detección de Desconexión (*Lead-Off*):** Evalúa señales digitales del módulo AD8232 (`LO+` y `LO-`) y umbrales mínimos de pulso. Si los electrodos se despegan del astronauta, la red neuronal se suprime inmediatamente para evitar falsos positivos y declara un estado `FALLO HARDWARE`.
-- **Inferencia Matemática Continua:** Normalización Min-Max vectorial y producto matricial con la matriz `pesos_nasa.h`.
-- **Motor de Soluciones EVA:** Si la probabilidad de anomalía supera el umbral crítico (> 0.8), el sistema redacta órdenes tácticas inmediatas (ej. inyección de $O_2$ al 100%, despresurización de emergencia o aborto de misión).
-- **Serialización Segura:** Los datos se formatean con `ArduinoJson` directamente en un buffer estático de 2048 bytes en el Stack, previniendo la fragmentación de memoria RAM causada por objetos `String`.
-
----
-
-## 📡 4. Mapeo de Hardware y Pines (ESP32)
-
-| Subsistema | Métrica | Sensor Sugerido | Pin ESP32 | Tipo |
-| :--- | :--- | :--- | :--- | :--- |
-| **Cerebro 2 (Biometría)** | Saturación $O_2$ (SpO2) | MAX30102 / Analógico | `GPIO 35` | ADC1_CH7 (Input) |
-| **Cerebro 2 (Biometría)** | Frecuencia Cardíaca (BPM) | Pulso Óptico / Analógico | `GPIO 34` | ADC1_CH6 (Input) |
-| **Cerebro 2 (Biometría)** | Temperatura Corporal | Termistor NTC / DS18B20 | `GPIO 32` | ADC1_CH4 (Input) |
-| **Cerebro 2 (Biometría)** | Electrocardiograma (ECG) | AD8232 Heart Monitor | `GPIO 33` | ADC1_CH5 (Input) |
-| **Cerebro 2 (Biometría)** | ECG Lead-Off Detect + | AD8232 LO+ | `GPIO 25` | Digital Input |
-| **Cerebro 2 (Biometría)** | ECG Lead-Off Detect - | AD8232 LO- | `GPIO 26` | Digital Input |
-| **Cerebro 1 (Ambiente)** | Temp. Interna del Traje | Termistor / DHT22 | `GPIO 27` | ADC2_CH7 (Input) |
-| **Cerebro 1 (Ambiente)** | Humedad Relativa | Sensor Capacitivo | `GPIO 14` | ADC2_CH6 (Input) |
-| **Cerebro 1 (Ambiente)** | Calidad del Aire / Gases | MQ-135 / Sensor VOC | `GPIO 12` | ADC2_CH5 (Input) |
-| **Cerebro 1 (Ambiente)** | Radiación Ionizante / UV | Fotodiodo UV / Tubo GM | `GPIO 13` | ADC2_CH4 (Input) |
-
----
-
-## 📊 5. Pipeline de Machine Learning (`train_biomimetic_matrix.py`)
+## 📊 4. Pipeline de Machine Learning (`train_biomimetic_matrix.py`)
 
 El script de entrenamiento sintetiza y procesa datos según los estándares médicos aeroespaciales:
 
@@ -152,7 +178,7 @@ python train_biomimetic_matrix.py
 
 ---
 
-## 💻 6. HUD Aeroespacial Frontend (`frontend/`)
+## 💻 5. HUD Aeroespacial Frontend (`frontend/`)
 
 El HUD es una aplicación web de alta fidelidad estética desarrollada bajo principios **Vanilla (Zero Dependencies)**, diseñada para cargarse instantáneamente desde la memoria SPIFFS del ESP32 o desde cualquier dispositivo móvil:
 
@@ -170,14 +196,16 @@ python -m http.server 8080
 
 ---
 
-## 📂 7. Estructura del Repositorio
+## 📂 6. Estructura del Repositorio
 
 ```text
-H.E.L.I.O/
+HELIOS-Biomimetic-Edge-AI/
 ├── .gitignore                    # Reglas de exclusión de compilación y temporales
-├── README.md                     # Documentación técnica integral
-├── central_node.cpp              # Firmware principal ESP32 (Dual-Core + Edge AI + WebSockets)
-├── peripheral_node.cpp           # Firmware secundario para nodos distribuidos (ESP-NOW + Watchdog)
+├── LICENSE                       # Licencia MIT del proyecto
+├── README.md                     # Documentación técnica integral del sistema
+├── cerebro_1_ambiental.cpp       # [Cerebro 1] Firmware ESP32 para Matriz Ambiental (ESP-NOW)
+├── cerebro_2_biometrico.cpp       # [Cerebro 2] Firmware ESP32 para Biometría y Soporte Vital (ESP-NOW)
+├── central_node.cpp              # [Cerebro 3] Nodo Central ESP32 (Receptor + Edge AI + WebSockets)
 ├── pesos_nasa.h                  # Cabecera C++ con matrices neuronales preentrenadas
 ├── train_biomimetic_matrix.py    # Pipeline de Machine Learning (NumPy, Pandas, Clean Code)
 └── frontend/                     # Aplicación HUD Aeroespacial Offline-First
@@ -188,50 +216,38 @@ H.E.L.I.O/
 
 ---
 
-## 🛠️ 8. Compilación y Despliegue del Firmware
+## 🛠️ 7. Compilación y Despliegue del Firmware
 
 ### Requisitos Previos
 1. **IDE:** [PlatformIO](https://platformio.org/) (recomendado en VSCode) o Arduino IDE con soporte para placa ESP32.
 2. **Librerías Necesarias:**
-   - `ESPAsyncWebServer` (por me-no-dev / mathieucarbou)
-   - `AsyncTCP`
-   - `ArduinoJson` (v6 o v7)
-   - `WiFi` (integrada en ESP32 core)
+   - `ESPAsyncWebServer` (en Cerebro 3)
+   - `AsyncTCP` (en Cerebro 3)
+   - `ArduinoJson` v7 o v6 (en Cerebro 1, 2 y 3)
+   - `WiFi` y `esp_now` (integradas en el core de ESP32)
 
-### Configuración de `platformio.ini` (Ejemplo)
-```ini
-[env:esp32dev]
-platform = espressif32
-board = esp32dev
-framework = arduino
-monitor_speed = 115200
-lib_deps =
-    bblanchon/ArduinoJson @ ^7.0.0
-    https://github.com/mathieucarbou/ESPAsyncWebServer.git
-    https://github.com/mathieucarbou/AsyncTCP.git
-```
-
-### Pasos de Puesta en Marcha
-1. Flashea `central_node.cpp` en tu ESP32 asegurando que `pesos_nasa.h` esté en el mismo directorio de compilación.
-2. Abre el monitor serie a **115200 baudios**.
-3. Desde tu smartphone, laptop o tablet, conéctate a la red WiFi:
+### Despliegue en los 3 Microcontroladores:
+1. **Flashear Cerebro 1:** Carga `cerebro_1_ambiental.cpp` en el ESP32 ambiental configurando la MAC del Cerebro 3.
+2. **Flashear Cerebro 2:** Carga `cerebro_2_biometrico.cpp` en el ESP32 biométrico configurando la MAC del Cerebro 3.
+3. **Flashear Cerebro 3:** Carga `central_node.cpp` asegurando que `pesos_nasa.h` esté en el mismo directorio de compilación.
+4. Conéctate con tu smartphone o tablet a la red WiFi:
    - **SSID:** `HELIOS_NETWORK`
    - **Contraseña:** `HELIOS_PASSWORD`
-4. Abre el archivo `frontend/index.html` en el navegador del dispositivo conectado. El HUD se sincronizará automáticamente con el WebSocket del traje (`ws://192.168.4.1/ws`).
+5. Abre `frontend/index.html` en el navegador del dispositivo móvil. Se sincronizará en tiempo real con el socket del traje espacial (`ws://192.168.4.1/ws`).
 
 ---
 
-## 🛡️ 9. Principios de Ingeniería de Software (Clean Code)
+## 🛡️ 8. Principios de Ingeniería de Software (Clean Code)
 
-- **Arquitectura Modular (SRP):** Tareas asíncronas separadas estrictamente por núcleo de procesamiento (Core 1 para Hardware y Red Neuronal; Core 0 para Comunicaciones WiFi).
+- **Arquitectura Modular (SRP):** Desacoplamiento total entre los sensores ambientales (Cerebro 1), sensores fisiológicos (Cerebro 2) y la unidad de inferencia y red (Cerebro 3).
 - **Tipado Estático Riguroso:** El código Python implementa Type Hinting completo (`Tuple`, `pd.DataFrame`, `np.ndarray`, etc.).
 - **Trazabilidad Profesional:** Prohibido el uso de `print()` no estructurado; se utiliza el módulo `logging` de Python (niveles INFO y ERROR con captura de excepciones específicas) y macros dedicadas `log_info()` y `log_error()` en C++.
 - **Operaciones Vectorizadas en Pandas:** Transformaciones numéricas sin bucles iterativos (`iterrows()` / `itertuples()`).
-- **Seguridad en Memoria:** Ausencia de bloqueos por `delay()` mediante el uso de timers y ticks de FreeRTOS (`vTaskDelay`). Eliminación de fragmentación en Heap serializando JSONs directamente en buffers de Stack.
+- **Seguridad en Memoria:** Ausencia de bloqueos por `delay()` mediante el uso de timers y ticks de FreeRTOS (`vTaskDelay`). Eliminación de fragmentación en Heap serializando JSONs directamente en buffers estáticos de Stack.
 
 ---
 
-## 📜 10. Licencia
+## 📜 9. Licencia
 
 Este proyecto está distribuido bajo la licencia **MIT**. Consulta el archivo `LICENSE` para más información.
 

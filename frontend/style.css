@@ -1,0 +1,255 @@
+:root {
+    --bg-dark: #030712;
+    --panel-bg: rgba(10, 20, 35, 0.65);
+    --glass-border: rgba(0, 243, 255, 0.2);
+    --cyan: #00f3ff;
+    --red: #ff2a2a;
+    --text-main: #e0fbfc;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 243, 255, 0.08) 0%, transparent 60%),
+        linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+    color: var(--text-main);
+    font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+    min-height: 100vh;
+    overflow: hidden; /* HUD fijo */
+}
+
+h1, h2, .logo {
+    font-family: 'Orbitron', 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+/* Glassmorphism Premium */
+.glass-panel {
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.hud-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    gap: 20px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--cyan);
+    text-shadow: 0 0 12px var(--cyan);
+}
+
+.logo span {
+    color: #fff;
+    text-shadow: none;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--red);
+    box-shadow: 0 0 10px var(--red);
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+.dot.connected {
+    background-color: var(--cyan);
+    box-shadow: 0 0 10px var(--cyan);
+}
+
+main {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    flex: 1;
+}
+
+.panel {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.panel h2 {
+    font-size: 1.1rem;
+    color: var(--cyan);
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.metric-card {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.metric-card .label {
+    font-size: 0.75rem;
+    color: #88a0b0;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.metric-card .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-top: 8px;
+    font-family: 'Orbitron', monospace;
+}
+
+/* Inteligencia Artificial UI */
+.ai-core-card {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--cyan);
+    border-radius: 8px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: inset 0 0 30px rgba(0, 243, 255, 0.05);
+    margin-top: auto;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--cyan);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+    box-shadow: 0 0 15px var(--cyan);
+}
+
+.anomaly-val {
+    font-size: 2.5rem;
+    font-family: 'Orbitron', monospace;
+    color: var(--cyan);
+    text-shadow: 0 0 15px var(--cyan);
+}
+
+/* Diagnósticos y Acciones */
+.diagnostic-box {
+    padding: 20px;
+    border-radius: 8px;
+    background: rgba(0, 243, 255, 0.05);
+    border-left: 4px solid var(--cyan);
+    transition: all 0.3s;
+}
+
+.diagnostic-box.danger {
+    background: rgba(255, 42, 42, 0.1);
+    border-left: 4px solid var(--red);
+}
+
+.status-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-family: 'Orbitron', monospace;
+}
+
+.action-list {
+    list-style: none;
+    flex: 1;
+}
+
+.action-list li {
+    background: rgba(0,0,0,0.3);
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+    padding-left: 35px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+.action-list li::before {
+    content: ">>";
+    position: absolute;
+    left: 12px;
+    color: var(--cyan);
+    font-family: 'Orbitron', monospace;
+    font-weight: bold;
+}
+.action-list.danger li {
+    border-color: rgba(255, 42, 42, 0.3);
+}
+.action-list.danger li::before {
+    color: var(--red);
+}
+
+/* ECG Canvas */
+.chart-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+}
+.chart-container .label {
+    font-size: 0.8rem;
+    color: #88a0b0;
+    margin-bottom: 8px;
+}
+canvas {
+    width: 100%;
+    background: rgba(0,0,0,0.6);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Animación de Emergencia Crítica */
+@keyframes pulseRedAlert {
+    0% { box-shadow: inset 0 0 30px rgba(255,42,42,0.1); border-color: var(--red); }
+    50% { box-shadow: inset 0 0 60px rgba(255,42,42,0.4); border-color: #ff5555; }
+    100% { box-shadow: inset 0 0 30px rgba(255,42,42,0.1); border-color: var(--red); }
+}
+
+.alert-state {
+    animation: pulseRedAlert 1.2s infinite;
+}

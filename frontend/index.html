@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H.E.L.I.O.S. | Aerospace HUD</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Fuentes (con fallback estándar para operar offline en el ESP32) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;500;700&display=swap');
+    </style>
+</head>
+
+<body>
+    <div class="hud-container">
+        <!-- BARRA SUPERIOR -->
+        <header class="glass-panel">
+            <div class="logo">H.E.L.I.O.S. <span>SYS</span></div>
+            <div class="status-indicator">
+                <span class="dot" id="ws-status-dot"></span>
+                <span id="ws-status-text">BÚSQUEDA DE SEÑAL...</span>
+            </div>
+            <div class="ai-status">
+                DNN MODEL: <span class="highlight" style="color:var(--cyan)">ACTIVE</span> | LATENCIA: <span
+                    id="latency-val">0</span>ms
+            </div>
+        </header>
+
+        <main>
+            <!-- COLUMNA IZQUIERDA: Biometría (Cerebro 2) -->
+            <section class="panel glass-panel">
+                <h2>BIOMETRÍA DEL ASTRONAUTA</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="label">O2 en Sangre (SpO2)</span>
+                        <div class="value"><span id="val-spo2">--</span>%</div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Frec. Cardíaca</span>
+                        <div class="value"><span id="val-bpm">--</span> BPM</div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Temp. Corporal</span>
+                        <div class="value"><span id="val-btemp">--</span>°C</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <span class="label">Electrocardiograma (ECG) Real-Time</span>
+                    <canvas id="ecgCanvas" width="400" height="120"></canvas>
+                </div>
+            </section>
+
+            <!-- COLUMNA CENTRAL: IA y Ambiente (Cerebro 1) -->
+            <section class="panel glass-panel center-panel">
+                <h2>AMBIENTE DEL TRAJE EVA</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="label">Temp. Interna</span>
+                        <div class="value"><span id="val-itemp">--</span>°C</div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Humedad</span>
+                        <div class="value"><span id="val-hum">--</span>%</div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Radiación Ionizante</span>
+                        <div class="value"><span id="val-rad">--</span> Sv</div>
+                    </div>
+                </div>
+
+                <div class="ai-core-card mt-2">
+                    <h2>ANÁLISIS NEURONAL PROFUNDO (DNN)</h2>
+                    <p style="font-size: 0.8rem; color: #88a0b0;">Probabilidad de Colapso Crítico</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="anomaly-bar"></div>
+                    </div>
+                    <div class="anomaly-val" id="anomaly-text">0.00%</div>
+                </div>
+            </section>
+
+            <!-- COLUMNA DERECHA: Diagnóstico y Acciones -->
+            <section class="panel glass-panel threat-panel">
+                <h2>DIAGNÓSTICO DEL SISTEMA</h2>
+                <div class="diagnostic-box" id="diagnostic-box">
+                    <div class="status-title" id="diag-status">NOMINAL</div>
+                    <p id="diag-message">Todos los parámetros dentro de umbrales seguros. Matriz biomimética estable.
+                    </p>
+                </div>
+
+                <h2 style="margin-top: 20px;">SUGERENCIAS TÁCTICAS</h2>
+                <ul class="action-list" id="action-list">
+                    <li>Continuar procedimiento EVA estándar.</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <!-- Lógica Vanilla JS (Sin frameworks pesados) -->
+    <script src="app.js"></script>
+</body>
+
+</html>
